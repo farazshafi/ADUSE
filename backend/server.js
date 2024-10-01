@@ -3,7 +3,7 @@ import express from "express"
 import dotenv from "dotenv"
 import connectDB from "./config/db.js"
 import userRouter from "./Router/userRouter.js"
-
+import adminRouter from "./Router/adminRouter.js"
 
 // configuration
 dotenv.config()
@@ -23,6 +23,7 @@ app.get("/",(req,res)=>{
     res.send("Api is running...")
 })
 app.use("/api/user/",userRouter)
+app.use("/api/admin/",adminRouter)
 
 
 // listners
