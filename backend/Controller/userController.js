@@ -3,7 +3,7 @@ import User from "../Model/userModel.js";
 import generateToken from "../utils/generateToken.js";
 
 // @desc    Register a new user
-// @route   POST /api/users/register
+// @route   POST /api/user/register
 // @access  public
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -27,15 +27,16 @@ export const registerUser = async (req, res) => {
     res.status(400).json({ message: "User registration failed" });
   }
 };
+
+// @desc    user login validation
+// @route   POST /api/user/login
+// @access  public
 export const login = async (req, res) => {
   const { password, email } = req.body;
   const userExists = await User.findOne({ email });
-
-  // Check if the user exists
   if (!userExists) {
     return res.status(404).json({ message: "User not found" });
   }
-
   const isPasswordMatched = await userExists.matchPassword(password);
   if (isPasswordMatched) {
     return res.status(200).json({
@@ -46,5 +47,26 @@ export const login = async (req, res) => {
     });
   } else {
     return res.status(400).json({ message: "Invalid email or password" });
+  }
+};
+
+// @desc    user profile update
+// @route   PUT /api/user/update
+// @access  private
+export const update = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      user.name = req.body.name || user.name;
+      user.email = req.body.email || user.email;
+      await user.save();
+      const { name, email, createdAt, updatedAt, _id } = user;
+      res.status(200).json({ message: "User updated successfully", user:{name,email,_id,createdAt,updatedAt} });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
   }
 };
