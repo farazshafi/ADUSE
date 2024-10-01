@@ -1,12 +1,15 @@
 import { Grid, Button, Typography, Avatar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import Profile from "../../assets/profile/profile.png"
+import Profile from "../../../assets/profile/profile.png";
+
 const HomePage = () => {
   const navigate = useNavigate();
+
   const handleProfileNavigation = (e) => {
     e.preventDefault();
     navigate("/profile");
   };
+
   return (
     <Grid
       container
@@ -20,7 +23,7 @@ const HomePage = () => {
           alt={"Faraz shafi"} // Replace with user's name
           sx={{ width: 100, height: 100, margin: "0 auto" }} // Centered avatar styling
         />
-        <Typography sx={{mt:"20px"}} variant="h5" gutterBottom>
+        <Typography sx={{ mt: "20px" }} variant="h5" gutterBottom>
           Welcome, Faraz shafi!
         </Typography>
 
@@ -28,8 +31,17 @@ const HomePage = () => {
           variant="contained"
           color="primary"
           onClick={handleProfileNavigation}
+          sx={{ mt: "10px" }}
         >
           Go to Profile
+        </Button>
+
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mt: "10px",ml: "10px" }}
+        >
+          Logout
         </Button>
       </Grid>
     </Grid>
