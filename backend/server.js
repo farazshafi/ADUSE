@@ -4,6 +4,7 @@ import dotenv from "dotenv"
 import connectDB from "./config/db.js"
 import userRouter from "./Router/userRouter.js"
 import adminRouter from "./Router/adminRouter.js"
+import cors from "cors"
 
 // configuration
 dotenv.config()
@@ -16,7 +17,9 @@ const PORT = process.env.PORT || 3000
 
 // middleware
 app.use(express.json())
-
+app.use(cors({
+  origin: 'http://localhost:5173/'
+}));
 
 // routes
 app.get("/",(req,res)=>{
