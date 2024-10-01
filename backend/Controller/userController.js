@@ -6,7 +6,7 @@ import generateToken from "../utils/generateToken.js";
 // @route   POST /api/user/register
 // @access  public
 export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, isAdmin } = req.body;
   const userExist = await User.findOne({ email });
   if (userExist) {
     return res.status(400).json({ message: "User already exists" });
@@ -15,6 +15,7 @@ export const registerUser = async (req, res) => {
     name,
     email,
     password,
+    isAdmin
   });
   if (user) {
     res.status(201).json({
