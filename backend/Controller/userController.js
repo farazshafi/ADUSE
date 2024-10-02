@@ -24,7 +24,9 @@ export const registerUser = async (req, res) => {
       email: user.email,
       token: generateToken(user._id),
     });
+    console.log("registration success")
   } else {
+    console.log("registration failed")
     res.status(400).json({ message: "User registration failed" });
   }
 };
