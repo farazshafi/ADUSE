@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Grid, TextField, Button, Typography, Paper } from "@mui/material";
 import { Link } from "react-router-dom";
+import MyContext from "../../../context/MyContext"
+// import axios from "axios"
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // const {setUser} = useContext(MyContext)
 
   const handleSubmit = (e) => {
     e.preventDefault();

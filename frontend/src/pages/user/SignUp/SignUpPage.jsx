@@ -1,13 +1,37 @@
 import { Grid, TextField, Button, Typography, Paper } from "@mui/material";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import MyContext from "../../../context/MyContext";
+import axios from "axios";
 const SignUpPage = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const { setUser } = useContext(MyContext);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    try {
+      setLoading(true);
+      const { data } = await axios.post(
+        "http://localhost:5000/api/user/register",
+        {
+          name: username,
+          email: email,
+          password: password,
+        }
+      );
+      setUser(data);
+      navigate("/login");
+      setLoading(false);
+    } catch (err) {
+      console.log(err);
+      setLoading(false);
+      return;
+    }
   };
 
   return (
@@ -59,9 +83,9 @@ const SignUpPage = () => {
               type="submit"
               style={{ marginTop: "1rem" }}
             >
-              Sign Up
+              {loading ? "loading..." : "Sign Up"}
             </Button>
-            <Typography sx={{mt:"20px"}} variant="body2" align="center">
+            <Typography sx={{ mt: "20px" }} variant="body2" align="center">
               Already have an account? <Link to={"/login"}>Login</Link>
             </Typography>
           </form>
