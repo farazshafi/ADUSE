@@ -4,16 +4,20 @@ dotenv.config();
 import { json } from "express";
 import User from "../Model/userModel.js";
 import generateToken from "../utils/generateToken.js";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import crypto from "crypto"
-
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import crypto from "crypto";
 
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
 const accessKey = process.env.ACCESS_KEY;
 const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 
-const randomImageName = () => crypto.randomBytes(32).toString("hex")
+const randomImageName = () => crypto.randomBytes(32).toString("hex");
 
 // aws s3 configuration
 const s3 = new S3Client({
@@ -23,7 +27,6 @@ const s3 = new S3Client({
   },
   region: bucketRegion,
 });
-
 
 // controller----------------------------------------------------------------
 
@@ -39,7 +42,7 @@ export const registerUser = async (req, res) => {
   let imageUrl = "";
   if (req.file) {
     const file = req.file;
-    console.log("bucket Name : ",bucketName)
+    console.log("bucket Name : ", bucketName);
     const s3Params = {
       Bucket: bucketName,
       Key: randomImageName(), // Unique file name
@@ -47,7 +50,7 @@ export const registerUser = async (req, res) => {
       ContentType: file.mimetype,
     };
     try {
-      const command = new PutObjectCommand(s3Params)
+      const command = new PutObjectCommand(s3Params);
       const data = await s3.send(command);
       imageUrl = `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${s3Params.Key}`;
     } catch (error) {
@@ -60,7 +63,7 @@ export const registerUser = async (req, res) => {
     email,
     password,
     isAdmin,
-    imageUrl:imageUrl || undefined
+    imageUrl: imageUrl || undefined,
   });
   if (user) {
     res.status(201).json({
@@ -137,5 +140,31 @@ export const getUserDetails = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
+  }
+};
+
+// @desc    get user details
+// @route   GET /api/user/profile_image/:id
+// @access  private
+export const getUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+
+    if (!user || !user.imageUrl) {
+      return res.status(404).json({ message: "User or image not found" });
+    }
+    const params = {
+      Bucket: bucketName,
+      Key: user.imageUrl.split("/").pop(),
+      Expires: 60,
+    };
+
+    const command = new GetObjectCommand(params);
+    const signedUrl = await getSignedUrl(s3, command);
+    res.status(200).json({ imageUrl: signedUrl });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
