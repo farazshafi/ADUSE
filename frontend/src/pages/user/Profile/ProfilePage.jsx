@@ -1,96 +1,86 @@
-import { Grid, Typography, Avatar, Button, Paper } from "@mui/material";
+import {
+  Avatar,
+  Button,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useContext, useEffect, useState } from "react";
-import Profile from "../../../assets/profile/profile.png";
 import MyContext from "../../../context/MyContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const ProfilePage = () => {
-  const [selectedFile, setSelectedFile] = useState(null);
   const { user, setUser } = useContext(MyContext);
+  const [name, setName] = useState(user && user.name);
+  const [email, setEmail] = useState(user && user.email);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [userName, setUserName] = useState(user && user.name);
+  const [profile, setProfile] = useState(user && user.imageUrl);
+
   const navigate = useNavigate();
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
 
-  const handleUpload = async () => {
-    const isConfirmed = window.confirm(
-      "Are you sure you want to upload the profile image?"
-    );
-    if (isConfirmed) {
-      if (selectedFile) {
-        // Prepare FormData
-        const formData = new FormData();
-        formData.append("profileImage", selectedFile);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        try {
-          setLoading(true);
-          const { data } = await axios.post(
-            "http://localhost:5000/api/user/upload-profile-image",
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-                Authorization: `Bearer ${user.token}`,
-              },
-            }
-          );
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("email", email);
+    if (selectedFile) {
+      formData.append("image", selectedFile);
+    }
 
-          // Update user profile picture after successful upload
-          setUser((prevUser) => ({
-            ...prevUser,
-            profileImage: data.profileImageUrl, // Assuming your API returns the new image URL
-          }));
-
-          setLoading(false);
-          alert("Profile image uploaded successfully!");
-        } catch (e) {
-          console.log(e.message);
-          setLoading(false);
-          alert("Failed to upload profile image.");
+    try {
+      const { data } = await axios.patch(
+        "http://localhost:5000/api/user/update",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${user.token}`,
+          },
         }
-      } else {
-        alert("No file selected.");
-      }
-    } else {
-      setSelectedFile(null);
+      );
+
+      console.log("Profile updated successfully:", data);
+      setUser((prevUser) => ({
+        ...prevUser,
+        name: data.name,
+        email: data.email,
+        imageUrl: data.imageUrl,
+      }));
+    } catch (error) {
+      console.error(
+        "Error updating profile:",
+        error.response ? error.response.data : error.message
+      );
     }
   };
-
-  const handleNameUpdate = async () => {
-    const newName = prompt("Enter your new name:", userName); // Prompt to update the name
-    if (newName) {
-      try {
-        setLoading(true);
-        const { data } = await axios.patch(
-          "http://localhost:5000/api/user/update",
-          { name: newName },
-          {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          }
-        );
-        setUser((prevUser) => ({
-          ...prevUser,
-          name: data.user.name,
-        }));
-        setLoading(false);
-      } catch (e) {
-        console.log(e.message);
-        setLoading(false);
-      }
-    }
-  };
-
   useEffect(() => {
     if (!user) {
       navigate("/login");
     }
-  }, []);
+    const fetchProfileImage = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get(
+          `http://localhost:5000/api/user/profile_image/${user._id}`
+        );
+        console.log("user profile data: ", data);
+        setProfile(data.imageUrl);
+        setLoading(false);
+      } catch (err) {
+        console.log(err);
+        setLoading(false);
+      }
+    };
+    fetchProfileImage();
+  }, [user]);
 
   return (
     <Grid
@@ -101,54 +91,70 @@ const ProfilePage = () => {
     >
       <Grid item xs={12} sm={8} md={4}>
         <Paper elevation={3} style={{ padding: "2rem", textAlign: "center" }}>
+          <Typography variant="h5" gutterBottom>
+            <p onClick={()=>navigate("/")}>GO BACK</p>
+          </Typography>
+          <Typography variant="h5" gutterBottom>
+            Update Profile
+          </Typography>
+
           <Avatar
-            src={user?.profileImage || Profile}
-            alt={user && user.name}
+            src={selectedFile ? URL.createObjectURL(selectedFile) : profile}
             sx={{ width: 100, height: 100, margin: "0 auto" }}
           />
-          <Typography variant="h5" gutterBottom>
-            {user && user.name}
-          </Typography>
-          <input
-            accept="image/*"
-            style={{ display: "none" }}
-            id="file-upload"
-            type="file"
-            onChange={handleFileChange}
+
+          {/* Name Input */}
+          <TextField
+            label="Name"
+            variant="outlined"
+            fullWidth
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{ marginTop: "1.5rem" }}
           />
-          <label htmlFor="file-upload">
-            <Button
-              variant="contained"
-              component="span"
-              color="primary"
-              style={{ marginTop: "1rem" }}
-            >
-              Upload Profile Image
-            </Button>
-          </label>
+
+          {/* Email Input */}
+          <TextField
+            label="Email"
+            variant="outlined"
+            fullWidth
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ marginTop: "1.5rem" }}
+          />
+
+          {/* Profile Image Upload */}
+          <Button
+            variant="contained"
+            component="label"
+            fullWidth
+            style={{ marginTop: "1.5rem" }}
+          >
+            Upload Profile Image
+            <input
+              type="file"
+              accept="image/*"
+              name="image"
+              hidden
+              onChange={handleFileChange}
+            />
+          </Button>
+
           {selectedFile && (
-            <Typography variant="body2" style={{ marginTop: "1rem" }}>
+            <Typography variant="body2" style={{ marginTop: "0.5rem" }}>
               Selected file: {selectedFile.name}
             </Typography>
           )}
+
+          {/* Submit Button */}
           <Button
             variant="contained"
             color="primary"
-            style={{ marginTop: "1rem", marginLeft: "5px" }}
-            onClick={handleUpload}
-            disabled={loading}
+            fullWidth
+            style={{ marginTop: "1.5rem" }}
+            onClick={handleSubmit}
           >
-            {loading ? "Uploading..." : "Update"}
-          </Button>
-
-          {/* New Update Name Button */}
-          <Button
-            variant="contained"
-            color="secondary"
-            style={{ marginTop: "1rem", marginLeft: "5px" }}
-            onClick={handleNameUpdate}
-          >
-            {loading ? "loading..." : "Update Name"}
+            Submit
           </Button>
         </Paper>
       </Grid>

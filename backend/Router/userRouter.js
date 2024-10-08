@@ -11,7 +11,7 @@ const upload = multer({ storage });
 
 router.post("/register",upload.single("image"),registerUser)
 router.post("/login",login)
-router.patch("/update",protect,update)
+router.patch("/update",protect,upload.single("image"),update)
 router.get("/:id",protect,getUserDetails)
 router.get("/profile_image/:id",getUserProfile)
 router.post("/register")

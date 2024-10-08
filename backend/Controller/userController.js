@@ -103,25 +103,52 @@ export const login = async (req, res) => {
   }
 };
 
-// @desc    user profile update
+// @desc    Update user profile (name, email, profile image)
 // @route   PATCH /api/user/update
-// @access  private
+// @access  Private
 export const update = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
-    if (user) {
-      user.name = req.body.name || user.name;
-      user.email = req.body.email || user.email;
-      await user.save();
-      const { name, email, createdAt, updatedAt, _id } = user;
-      res.status(200).json({
-        message: "User updated successfully",
-        user: { name, email, _id, createdAt, updatedAt },
-      });
-    } else {
-      res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+
+    // Update user fields (name, email)
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+
+    // Handle profile image update
+    let imageUrl = user.imageUrl; // Keep current image URL if not updating
+    if (req.file) {
+      const file = req.file;
+      const s3Params = {
+        Bucket: bucketName,
+        Key: randomImageName(), // Unique file name
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      };
+
+      try {
+        const command = new PutObjectCommand(s3Params);
+        await s3.send(command);
+        imageUrl = `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${s3Params.Key}`;
+      } catch (error) {
+        console.error("Error uploading image to S3", error);
+        return res.status(500).json({ message: "Image upload failed" });
+      }
+    }
+
+    user.imageUrl = imageUrl;
+    await user.save();
+
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      imageUrl: user.imageUrl,
+      message: "Profile updated successfully",
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
