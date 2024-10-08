@@ -1,15 +1,52 @@
-import { Grid, Paper, Avatar, TextField, Button, Typography } from "@mui/material";
+import {
+  Grid,
+  Paper,
+  Avatar,
+  TextField,
+  Button,
+  Typography,
+} from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import MyContext from "../../../context/MyContext";
 
 const AdminLoginPage = () => {
+  const {admin,setAdmin} = useContext(MyContext)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    try {
+      setLoading(true);
+      const {data} = await axios.post("http://localhost:5000/api/admin/login", {
+        email,
+        password,
+      });
+      if (data) {
+        localStorage.setItem("admin", JSON.stringify(data));
+        setAdmin(data)
+        navigate("/admin_dashboard");
+      } else {
+        alert("Invalid credentials");
+        setLoading(false);
+      }
+    } catch (err) {
+      console.log(err);
+      setLoading(false);
+    }
   };
-  
+
+  useEffect(()=>{
+    if(admin){
+      navigate("/admin_dashboard");
+    }
+  })
+
   return (
     <Grid
       container
@@ -22,7 +59,7 @@ const AdminLoginPage = () => {
           <Avatar style={{ backgroundColor: "#FF7F11", margin: "0 auto" }}>
             <LockOutlinedIcon />
           </Avatar>
-          <Typography sx={{marginTop:"20px"}} variant="h5" gutterBottom>
+          <Typography sx={{ marginTop: "20px" }} variant="h5" gutterBottom>
             Admin Login
           </Typography>
           <form onSubmit={handleLogin}>
@@ -55,7 +92,7 @@ const AdminLoginPage = () => {
               fullWidth
               style={{ marginTop: "1rem" }}
             >
-              Login
+              {loading ? "Loading..." : "Login"}
             </Button>
           </form>
         </Paper>

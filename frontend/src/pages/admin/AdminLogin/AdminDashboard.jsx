@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Grid,
   Paper,
@@ -17,6 +17,8 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit"; // Import Edit Icon
 import AddIcon from "@mui/icons-material/Add";
+import MyContext from "../../../context/MyContext";
+import { useNavigate } from "react-router-dom";
 
 const initialUsers = [
   { id: 1, name: "John Doe", email: "john@example.com" },
@@ -25,6 +27,7 @@ const initialUsers = [
 ];
 
 const AdminDashboard = () => {
+  const {admin} = useContext(MyContext)
   const [users, setUsers] = useState(initialUsers);
   const [search, setSearch] = useState("");
   const [openModal, setOpenModal] = useState(false);
@@ -33,6 +36,8 @@ const AdminDashboard = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [editedName, setEditedName] = useState("");
   const [editedEmail, setEditedEmail] = useState("");
+
+  const navigate = useNavigate()
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -77,6 +82,11 @@ const AdminDashboard = () => {
     handleCloseEditModal();
   };
 
+  useEffect(()=>{
+    if(!admin){
+      navigate("/admin_login");
+    }
+  })
   return (
     <Grid container justifyContent="center" style={{ padding: "20px" }}>
       <Grid item xs={12}>

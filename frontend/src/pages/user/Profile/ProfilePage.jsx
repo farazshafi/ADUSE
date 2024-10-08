@@ -154,7 +154,7 @@ const ProfilePage = () => {
             style={{ marginTop: "1.5rem" }}
             onClick={handleSubmit}
           >
-            Submit
+            {loading ? "loading...": "Submit"}
           </Button>
         </Paper>
       </Grid>
