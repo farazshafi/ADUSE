@@ -1,18 +1,50 @@
-import { useContext, useState } from "react";
-import { Grid, TextField, Button, Typography, Paper } from "@mui/material";
-import { Link } from "react-router-dom";
-import MyContext from "../../../context/MyContext"
+import { useContext, useEffect, useState } from "react";
+import {
+  Grid,
+  TextField,
+  Button,
+  Typography,
+  Paper,
+  useRadioGroup,
+} from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import MyContext from "../../../context/MyContext";
+import axios from "axios";
 // import axios from "axios"
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { user, setUser } = useContext(MyContext);
+  const [loading, setLoading] = useState(false);
 
-  // const {setUser} = useContext(MyContext)
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    try {
+      setLoading(true);
+      const {data} = await axios.post("http://localhost:5000/api/user/login", {
+        email: email,
+        password: password,
+      });
+      if(data){
+        setUser(data)
+        navigate("/")
+        setLoading(false);
+      }
+    } catch (err) {
+      console.log(err.message);
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    console.log(useRadioGroup);
+    if (user) {
+      navigate("/");
+    }
+  }, [user,navigate]);
 
   return (
     <Grid
@@ -54,7 +86,7 @@ const LoginPage = () => {
               type="submit"
               style={{ marginTop: "1rem" }}
             >
-              Login
+              {loading ? "Loading..." : "Login"}
             </Button>
             <Typography sx={{ mt: "20px" }} variant="body2" align="center">
               {"Don't have an account? "}

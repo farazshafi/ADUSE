@@ -1,38 +1,54 @@
 import { Grid, TextField, Button, Typography, Paper } from "@mui/material";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MyContext from "../../../context/MyContext";
 import axios from "axios";
+
 const SignUpPage = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState(null); // New state for image
 
-  const { setUser } = useContext(MyContext);
+  const { setUser, user } = useContext(MyContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
+
+      // Create form data
+      const formData = new FormData();
+      formData.append("name", username);
+      formData.append("email", email);
+      formData.append("password", password);
+      if (image) formData.append("image", image); // Add image file
+
+      // Send form data including image
       const { data } = await axios.post(
         "http://localhost:5000/api/user/register",
+        formData,
         {
-          name: username,
-          email: email,
-          password: password,
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
+
       setUser(data);
       navigate("/login");
       setLoading(false);
     } catch (err) {
       console.log(err);
       setLoading(false);
-      return;
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   return (
     <Grid
@@ -46,7 +62,7 @@ const SignUpPage = () => {
           <Typography variant="h5" align="center" gutterBottom>
             Sign Up
           </Typography>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} encType="multipart/form-data">
             <TextField
               label="Username"
               variant="outlined"
@@ -75,6 +91,13 @@ const SignUpPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+            />
+            <input
+              type="file"
+              accept="image/*"
+              name="image"
+              onChange={(e) => setImage(e.target.files[0])}
+              style={{ marginTop: "1rem" }}
             />
             <Button
               variant="contained"

@@ -1,6 +1,9 @@
 import mongoose, { mongo } from "mongoose";
 import bcrypt from "bcryptjs"
 
+const defaultProfileImageUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/blank-profile.png`;
+
+
 const userSchema = mongoose.Schema(
   {
     name: {
@@ -20,6 +23,10 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    imageUrl:{
+      type: String,
+      default: defaultProfileImageUrl
+    }
   },
   { timestamps: true }
 );

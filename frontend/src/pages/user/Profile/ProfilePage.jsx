@@ -1,35 +1,96 @@
 import { Grid, Typography, Avatar, Button, Paper } from "@mui/material";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Profile from "../../../assets/profile/profile.png";
+import MyContext from "../../../context/MyContext";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const ProfilePage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [userName, setUserName] = useState("Faraz shafi"); // State to store user name
+  const { user, setUser } = useContext(MyContext);
+  const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState(user && user.name);
+  const navigate = useNavigate();
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
 
-  const handleUpload = () => {
-    const isConfirmed = window.confirm("Are you sure you want to upload the profile image?");
+  const handleUpload = async () => {
+    const isConfirmed = window.confirm(
+      "Are you sure you want to upload the profile image?"
+    );
     if (isConfirmed) {
       if (selectedFile) {
-        // Handle file upload logic here
-        alert("File uploaded successfully!");
+        // Prepare FormData
+        const formData = new FormData();
+        formData.append("profileImage", selectedFile);
+
+        try {
+          setLoading(true);
+          const { data } = await axios.post(
+            "http://localhost:5000/api/user/upload-profile-image",
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${user.token}`,
+              },
+            }
+          );
+
+          // Update user profile picture after successful upload
+          setUser((prevUser) => ({
+            ...prevUser,
+            profileImage: data.profileImageUrl, // Assuming your API returns the new image URL
+          }));
+
+          setLoading(false);
+          alert("Profile image uploaded successfully!");
+        } catch (e) {
+          console.log(e.message);
+          setLoading(false);
+          alert("Failed to upload profile image.");
+        }
       } else {
         alert("No file selected.");
       }
     } else {
-      setSelectedFile(null)
+      setSelectedFile(null);
     }
   };
 
-  const handleNameUpdate = () => {
+  const handleNameUpdate = async () => {
     const newName = prompt("Enter your new name:", userName); // Prompt to update the name
     if (newName) {
-      setUserName(newName); // Update the name if not empty
+      try {
+        setLoading(true);
+        const { data } = await axios.patch(
+          "http://localhost:5000/api/user/update",
+          { name: newName },
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }
+        );
+        setUser((prevUser) => ({
+          ...prevUser,
+          name: data.user.name,
+        }));
+        setLoading(false);
+      } catch (e) {
+        console.log(e.message);
+        setLoading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, []);
 
   return (
     <Grid
@@ -41,12 +102,12 @@ const ProfilePage = () => {
       <Grid item xs={12} sm={8} md={4}>
         <Paper elevation={3} style={{ padding: "2rem", textAlign: "center" }}>
           <Avatar
-            src={Profile} // User's current avatar URL
-            alt={userName} // User's name
-            sx={{ width: 100, height: 100, margin: "0 auto" }} // Centered avatar styling
+            src={user?.profileImage || Profile}
+            alt={user && user.name}
+            sx={{ width: 100, height: 100, margin: "0 auto" }}
           />
           <Typography variant="h5" gutterBottom>
-            {userName}
+            {user && user.name}
           </Typography>
           <input
             accept="image/*"
@@ -75,8 +136,9 @@ const ProfilePage = () => {
             color="primary"
             style={{ marginTop: "1rem", marginLeft: "5px" }}
             onClick={handleUpload}
+            disabled={loading}
           >
-            Update
+            {loading ? "Uploading..." : "Update"}
           </Button>
 
           {/* New Update Name Button */}
@@ -86,7 +148,7 @@ const ProfilePage = () => {
             style={{ marginTop: "1rem", marginLeft: "5px" }}
             onClick={handleNameUpdate}
           >
-            Update Name
+            {loading ? "loading..." : "Update Name"}
           </Button>
         </Paper>
       </Grid>
