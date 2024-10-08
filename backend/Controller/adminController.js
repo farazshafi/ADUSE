@@ -6,7 +6,7 @@ import generageTokens from "../utils/generateToken.js";
 // @access  private admin
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}).select("-password");
+    const users = await User.find({isAdmin:false}).select("-password");
     if (users) {
       res.status(200).json(users);
     }

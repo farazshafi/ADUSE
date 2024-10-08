@@ -19,16 +19,11 @@ import EditIcon from "@mui/icons-material/Edit"; // Import Edit Icon
 import AddIcon from "@mui/icons-material/Add";
 import MyContext from "../../../context/MyContext";
 import { useNavigate } from "react-router-dom";
-
-const initialUsers = [
-  { id: 1, name: "John Doe", email: "john@example.com" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com" },
-  { id: 3, name: "Sam Wilson", email: "sam@example.com" },
-];
+import axios from "axios";
 
 const AdminDashboard = () => {
-  const {admin} = useContext(MyContext)
-  const [users, setUsers] = useState(initialUsers);
+  const { admin } = useContext(MyContext);
+  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -37,15 +32,11 @@ const AdminDashboard = () => {
   const [editedName, setEditedName] = useState("");
   const [editedEmail, setEditedEmail] = useState("");
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
   };
-
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(search.toLowerCase())
-  );
 
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
@@ -59,34 +50,40 @@ const AdminDashboard = () => {
 
   const handleOpenEditModal = (user) => {
     setSelectedUser(user);
-    setEditedName(user.name); 
+    setEditedName(user.name);
     setEditedEmail(user.email);
     setOpenEditModal(true);
   };
 
   const handleCloseEditModal = () => setOpenEditModal(false);
 
-  const handleDeleteUser = () => {
-    setUsers(users.filter((user) => user.id !== selectedUser.id));
-    handleCloseDeleteModal();
+  const handleDeleteUser = async () => {
+    //  handle delete here
   };
 
-  const handleEditUser = () => {
-    setUsers(
-      users.map((user) =>
-        user.id === selectedUser.id
-          ? { ...user, name: editedName, email: editedEmail }
-          : user
-      )
-    );
-    handleCloseEditModal();
+  const handleEditUser = async () => {
+    // handle edit here
   };
 
-  useEffect(()=>{
-    if(!admin){
+  useEffect(() => {
+    if (!admin) {
       navigate("/admin_login");
     }
-  })
+
+    const fetchAllUsers = async () => {
+      try {
+        const { data } = await axios.get(
+          "http://localhost:5000/api/admin/users"
+        );
+        setUsers(data);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+      }
+    };
+
+    fetchAllUsers();
+  }, [admin, navigate]);
+
   return (
     <Grid container justifyContent="center" style={{ padding: "20px" }}>
       <Grid item xs={12}>
@@ -124,26 +121,30 @@ const AdminDashboard = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      aria-label="edit"
-                      onClick={() => handleOpenEditModal(user)} // Open Edit Modal
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      aria-label="delete"
-                      onClick={() => handleOpenDeleteModal(user)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {users
+                .filter((user) =>
+                  user.name.toLowerCase().includes(search.toLowerCase())
+                )
+                .map((user) => (
+                  <TableRow key={user._id}>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        aria-label="edit"
+                        onClick={() => handleOpenEditModal(user)} // Pass user to the function
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        aria-label="delete"
+                        onClick={() => handleOpenDeleteModal(user)} // Pass user to the function
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
@@ -177,10 +178,7 @@ const AdminDashboard = () => {
             variant="contained"
             color="primary"
             style={{ marginTop: "20px" }}
-            onClick={() => {
-              // Handle adding the user logic
-              handleCloseModal();
-            }}
+            onClick={handleCloseModal}
           >
             Add User
           </Button>
