@@ -12,7 +12,6 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Modal,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit"; // Import Edit Icon
@@ -25,12 +24,6 @@ const AdminDashboard = () => {
   const { admin } = useContext(MyContext);
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-  const [openModal, setOpenModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openEditModal, setOpenEditModal] = useState(false); // State for Edit Modal
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [editedName, setEditedName] = useState("");
-  const [editedEmail, setEditedEmail] = useState("");
 
   const navigate = useNavigate();
 
@@ -38,48 +31,45 @@ const AdminDashboard = () => {
     setSearch(e.target.value);
   };
 
-  const handleOpenModal = () => setOpenModal(true);
-  const handleCloseModal = () => setOpenModal(false);
-
-  const handleOpenDeleteModal = (user) => {
-    setSelectedUser(user);
-    setOpenDeleteModal(true);
+  const fetchAllUsers = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:5000/api/admin/users");
+      setUsers(data);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
   };
 
-  const handleCloseDeleteModal = () => setOpenDeleteModal(false);
-
-  const handleOpenEditModal = (user) => {
-    setSelectedUser(user);
-    setEditedName(user.name);
-    setEditedEmail(user.email);
-    setOpenEditModal(true);
+  const handleAddUser = () => {
+    // Redirect to add user page or implement add logic here
+    navigate("/admin/add_user"); // Example of redirect to an add user page
   };
 
-  const handleCloseEditModal = () => setOpenEditModal(false);
-
-  const handleDeleteUser = async () => {
-    //  handle delete here
+  const handleDeleteUser = async (id, name) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${name}?`
+    );
+    if (confirmDelete) {
+      try {
+        const { data } = await axios.delete(
+          `http://localhost:5000/api/admin/delete/${id}`
+        );
+        fetchAllUsers()
+      } catch (err) {
+        console.log(err);
+      }
+    }
   };
 
-  const handleEditUser = async () => {
-    // handle edit here
+  const handleEditUser = (id) => {
+    // Redirect to edit page or implement edit logic here
+    navigate(`/admin/edit_user/${id}`); // Example of redirect to an edit user page
   };
 
   useEffect(() => {
     if (!admin) {
       navigate("/admin_login");
     }
-
-    const fetchAllUsers = async () => {
-      try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/admin/users"
-        );
-        setUsers(data);
-      } catch (err) {
-        console.error("Error fetching users:", err);
-      }
-    };
 
     fetchAllUsers();
   }, [admin, navigate]);
@@ -102,7 +92,7 @@ const AdminDashboard = () => {
             variant="contained"
             color="primary"
             startIcon={<AddIcon />}
-            onClick={handleOpenModal}
+            onClick={handleAddUser}
             style={{ marginLeft: "20px" }}
           >
             Add User
@@ -121,142 +111,30 @@ const AdminDashboard = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users
-                .filter((user) =>
-                  user.name.toLowerCase().includes(search.toLowerCase())
-                )
-                .map((user) => (
-                  <TableRow key={user._id}>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        aria-label="edit"
-                        onClick={() => handleOpenEditModal(user)} // Pass user to the function
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        aria-label="delete"
-                        onClick={() => handleOpenDeleteModal(user)} // Pass user to the function
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
+              {users.map((user) => (
+                <TableRow key={user._id}>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      aria-label="edit"
+                      onClick={() => handleEditUser(user._id)} // Redirect to edit page
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      aria-label="delete"
+                      onClick={() => handleDeleteUser(user._id, user.name)} // Confirm delete
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
       </Grid>
-
-      {/* Add User Modal */}
-      <Modal open={openModal} onClose={handleCloseModal}>
-        <Paper
-          style={{
-            padding: "20px",
-            textAlign: "center",
-            width: 300,
-            margin: "auto",
-            marginTop: "20%",
-          }}
-        >
-          <Typography variant="h6">Add New User</Typography>
-          <TextField
-            label="Name"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            label="Email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            style={{ marginTop: "20px" }}
-            onClick={handleCloseModal}
-          >
-            Add User
-          </Button>
-        </Paper>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal open={openDeleteModal} onClose={handleCloseDeleteModal}>
-        <Paper
-          style={{
-            padding: "20px",
-            textAlign: "center",
-            width: 300,
-            margin: "auto",
-            marginTop: "20%",
-          }}
-        >
-          <Typography variant="h6">Confirm Deletion</Typography>
-          <Typography>
-            Are you sure you want to delete {selectedUser?.name}?
-          </Typography>
-          <Button
-            variant="contained"
-            color="secondary"
-            style={{ marginTop: "20px" }}
-            onClick={handleDeleteUser}
-          >
-            Delete
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            style={{ marginTop: "20px", marginLeft: "10px" }}
-            onClick={handleCloseDeleteModal}
-          >
-            Cancel
-          </Button>
-        </Paper>
-      </Modal>
-
-      {/* Edit User Modal */}
-      <Modal open={openEditModal} onClose={handleCloseEditModal}>
-        <Paper
-          style={{
-            padding: "20px",
-            textAlign: "center",
-            width: 300,
-            margin: "auto",
-            marginTop: "20%",
-          }}
-        >
-          <Typography variant="h6">Edit User</Typography>
-          <TextField
-            label="Name"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={editedName}
-            onChange={(e) => setEditedName(e.target.value)} // Set edited name
-          />
-          <TextField
-            label="Email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={editedEmail}
-            onChange={(e) => setEditedEmail(e.target.value)} // Set edited email
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            style={{ marginTop: "20px" }}
-            onClick={handleEditUser} // Handle editing the user
-          >
-            Save Changes
-          </Button>
-        </Paper>
-      </Modal>
     </Grid>
   );
 };

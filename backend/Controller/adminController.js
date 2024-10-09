@@ -6,7 +6,7 @@ import generageTokens from "../utils/generateToken.js";
 // @access  private admin
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({isAdmin:false}).select("-password");
+    const users = await User.find({ isAdmin: false }).select("-password");
     if (users) {
       res.status(200).json(users);
     }
@@ -25,7 +25,7 @@ export const deleteUser = async (req, res) => {
 
     if (user) {
       await user.deleteOne(); // Use deleteOne instead of remove
-      res.status(200).json({ message: "User deleted successfully" });
+      res.status(200).json();
     } else {
       res.status(404).json({ message: "User not found" });
     }
@@ -70,7 +70,7 @@ export const loginValidation = async (req, res) => {
       if (!isMatch) {
         return res.status(401).json({ message: "Invalid password" });
       }
-      console.log("password matched")
+      console.log("password matched");
       res.status(200).json({
         _id: user._id,
         name: user.name,
