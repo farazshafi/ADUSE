@@ -6,6 +6,7 @@ import ProfilePage from "./pages/user/Profile/ProfilePage";
 import AdminLoginPage from "./pages/admin/AdminLogin/AdminLoginPage"
 import AdminDashboard from "./pages/admin/AdminLogin/AdminDashboard";
 import AdminEditUser from "./pages/admin/AdminLogin/AdminEditUser";
+import AdminAddUserPage from "./pages/admin/AdminAddUserPage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/admin_login" element={<AdminLoginPage />}></Route>
           <Route path="/admin_dashboard" element={<AdminDashboard />}></Route>
           <Route path="admin/edit_user/:id" element={<AdminEditUser />}></Route>
+          <Route path="admin/add_user/" element={<AdminAddUserPage />}></Route>
         </Routes>
       </BrowserRouter>
     </>

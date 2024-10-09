@@ -88,7 +88,7 @@ export const loginValidation = async (req, res) => {
 };
 
 // @desc    get user details
-// @route   POST /api/admin/user/:id
+// @route   GET /api/admin/user/:id
 // @access  private admin
 export const getSingleUser = async (req, res) => {
   const {id} = req.params
@@ -114,3 +114,41 @@ export const getSingleUser = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
+
+// @desc    create a new user
+// @route   POST /api/admin/create_user
+// @access  private admin
+export const createUser = async (req, res) => {
+  const { name, email, password, isAdmin } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const newUser = await User.create({
+      name,
+      email,
+      password,
+      isAdmin,
+    });
+
+    if (newUser) {
+      res.status(201).json({
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        isAdmin: newUser.isAdmin,
+        token: generageTokens(newUser._id), 
+      });
+      console.log("User created successfully.");
+    }
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
