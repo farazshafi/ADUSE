@@ -51,7 +51,7 @@ const AdminDashboard = () => {
     );
     if (confirmDelete) {
       try {
-        const { data } = await axios.delete(
+        await axios.delete(
           `http://localhost:5000/api/admin/delete/${id}`
         );
         fetchAllUsers()
@@ -62,8 +62,7 @@ const AdminDashboard = () => {
   };
 
   const handleEditUser = (id) => {
-    // Redirect to edit page or implement edit logic here
-    navigate(`/admin/edit_user/${id}`); // Example of redirect to an edit user page
+    navigate(`/admin/edit_user/${id}`); 
   };
 
   useEffect(() => {

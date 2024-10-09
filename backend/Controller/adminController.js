@@ -56,7 +56,7 @@ export const editUser = async (req, res) => {
 
 // @desc    admin validation
 // @route   POST /api/admin/login
-// @access  private admin validation
+// @access  private admin 
 export const loginValidation = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -71,6 +71,34 @@ export const loginValidation = async (req, res) => {
         return res.status(401).json({ message: "Invalid password" });
       }
       console.log("password matched");
+      res.status(200).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        imageUrl: user.imageUrl,
+        token: generageTokens(user._id),
+        isAdmin: user.isAdmin,
+      });
+    } else {
+      return res.status(401).json({ message: "You are not admin" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+// @desc    get user details
+// @route   POST /api/admin/user/:id
+// @access  private admin
+export const getSingleUser = async (req, res) => {
+  const {id} = req.params
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user) {
       res.status(200).json({
         _id: user._id,
         name: user.name,
