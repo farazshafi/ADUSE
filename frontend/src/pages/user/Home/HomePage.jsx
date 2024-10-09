@@ -24,7 +24,9 @@ const HomePage = () => {
   useEffect(() => {
     if (!user) {
       navigate("/login");
+      return;
     }
+
     const fetchProfileImage = async () => {
       try {
         setLoading(true);
@@ -32,6 +34,14 @@ const HomePage = () => {
           `http://localhost:5000/api/user/profile_image/${user._id}`
         );
         console.log("user profile data: ", data);
+
+        // Update the profile state and only update the user context if the profile image is different
+        if (data.imageUrl !== user.profileImage) {
+          setUser((prevUser) => ({
+            ...prevUser,
+            profileImage: data.imageUrl,
+          }));
+        }
         setProfile(data.imageUrl);
         setLoading(false);
       } catch (err) {
@@ -39,8 +49,9 @@ const HomePage = () => {
         setLoading(false);
       }
     };
+
     fetchProfileImage();
-  }, [user, navigate]);
+  }, [navigate, setUser, user]);
 
   return (
     <Grid

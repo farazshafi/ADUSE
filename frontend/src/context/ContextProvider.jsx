@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import MyContext from "./MyContext";
 
@@ -24,7 +25,7 @@ const ContextProvider = ({ children }) => {
     }else{
       console.log("admin is not logged in");
     }
-  });
+  },[setUser,user]);
   return (
     <MyContext.Provider value={{ user, setUser, admin, setAdmin }}>
       {children}

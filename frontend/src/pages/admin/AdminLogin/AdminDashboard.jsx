@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const AdminDashboard = () => {
-  const { admin } = useContext(MyContext);
+  const { admin,setAdmin,user } = useContext(MyContext);
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
 
@@ -47,7 +47,7 @@ const AdminDashboard = () => {
 
   const handleDeleteUser = async (id, name) => {
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${name}?`
+      `Are you sure you want to delete ${name}`
     );
     if (confirmDelete) {
       try {
@@ -65,21 +65,30 @@ const AdminDashboard = () => {
     navigate(`/admin/edit_user/${id}`); 
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("admin")
+    setAdmin(null)
+  }
+
   useEffect(() => {
     if (!admin) {
       navigate("/admin_login");
     }
 
     fetchAllUsers();
-  }, [admin, navigate]);
+  }, [admin, navigate,user]);
 
   return (
     <Grid container justifyContent="center" style={{ padding: "20px" }}>
       <Grid item xs={12}>
         <Paper elevation={3} style={{ padding: "20px", textAlign: "center" }}>
           <Typography variant="h4" gutterBottom>
+            <h3 onClick={handleLogout}>Logout</h3>
+          </Typography>
+          <Typography variant="h4" gutterBottom>
             Admin Dashboard
           </Typography>
+          
           <TextField
             label="Search Users"
             variant="outlined"

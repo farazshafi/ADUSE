@@ -3,15 +3,19 @@ import LoginPage from "./pages/user/Login/LoginPage";
 import SignUpPage from "./pages/user/SignUp/SignUpPage";
 import HomePage from "./pages/user/Home/HomePage";
 import ProfilePage from "./pages/user/Profile/ProfilePage";
-import AdminLoginPage from "./pages/admin/AdminLogin/AdminLoginPage"
+import AdminLoginPage from "./pages/admin/AdminLogin/AdminLoginPage";
 import AdminDashboard from "./pages/admin/AdminLogin/AdminDashboard";
 import AdminEditUser from "./pages/admin/AdminLogin/AdminEditUser";
 import AdminAddUserPage from "./pages/admin/AdminAddUserPage";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
   return (
     <>
       <BrowserRouter>
+        <ToastContainer />
         <Routes>
           {/* user route */}
           <Route exact path="/" element={<HomePage />}></Route>

@@ -10,7 +10,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import MyContext from "../../../context/MyContext";
 import axios from "axios";
-// import axios from "axios"
+import { toast } from "react-toastify";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -24,17 +24,26 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const {data} = await axios.post("http://localhost:5000/api/user/login", {
-        email: email,
-        password: password,
-      });
-      if(data){
-        setUser(data)
-        navigate("/")
+      const { data } = await axios.post(
+        "http://localhost:5000/api/user/login",
+        {
+          email: email,
+          password: password,
+        }
+      );
+      if (data) {
+        setUser(data);
+        toast.success("Successfully logged in")
+        navigate("/");
         setLoading(false);
       }
     } catch (err) {
-      console.log(err.message);
+      console.log(err)
+      if (err.response && err.response.data && err.response.data.message) {
+        toast.error(err.response.data.message); // Error message from backend
+      } else {
+        toast.error("An error occurred. Please try again.");
+      }
       setLoading(false);
     }
   };
@@ -44,7 +53,7 @@ const LoginPage = () => {
     if (user) {
       navigate("/");
     }
-  }, [user,navigate]);
+  }, [user, navigate]);
 
   return (
     <Grid

@@ -88,20 +88,27 @@ export const login = async (req, res) => {
   const userExists = await User.findOne({ email });
   if (!userExists) {
     return res.status(404).json({ message: "User not found" });
-  }
-  const isPasswordMatched = await userExists.matchPassword(password);
-  if (isPasswordMatched) {
-    return res.status(200).json({
-      _id: userExists._id,
-      name: userExists.name,
-      email: userExists.email,
-      imageUrl: userExists.imageUrl,
-      token: generateToken(userExists._id),
-    });
   } else {
-    return res.status(400).json({ message: "Invalid email or password" });
+    if (userExists.isAdmin) {
+      return res
+        .status(400)
+        .json({ message: "admin have admin page go there" });
+    }
+    const isPasswordMatched = await userExists.matchPassword(password);
+    if (isPasswordMatched) {
+      return res.status(200).json({
+        _id: userExists._id,
+        name: userExists.name,
+        email: userExists.email,
+        imageUrl: userExists.imageUrl,
+        token: generateToken(userExists._id),
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
   }
 };
+
 
 // @desc    Update user profile (name, email, profile image)
 // @route   PATCH /api/user/update

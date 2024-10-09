@@ -11,9 +11,10 @@ import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import MyContext from "../../../context/MyContext";
+import { toast } from "react-toastify";
 
 const AdminLoginPage = () => {
-  const {admin,setAdmin} = useContext(MyContext)
+  const { admin, setAdmin } = useContext(MyContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,29 +24,34 @@ const AdminLoginPage = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const {data} = await axios.post("http://localhost:5000/api/admin/login", {
-        email,
-        password,
-      });
+      const { data } = await axios.post(
+        "http://localhost:5000/api/admin/login",
+        {
+          email,
+          password,
+        }
+      );
       if (data) {
         localStorage.setItem("admin", JSON.stringify(data));
-        setAdmin(data)
+        setAdmin(data);
+        toast.success("admin login successful");
         navigate("/admin_dashboard");
-      } else {
-        alert("Invalid credentials");
-        setLoading(false);
+        setLoading(false)
       }
     } catch (err) {
+      if(err.response && err.response.data && err.response.data.message){
+        toast.error(err.response.data.message) 
+      }
       console.log(err);
       setLoading(false);
     }
   };
 
-  useEffect(()=>{
-    if(admin){
+  useEffect(() => {
+    if (admin) {
       navigate("/admin_dashboard");
     }
-  })
+  });
 
   return (
     <Grid

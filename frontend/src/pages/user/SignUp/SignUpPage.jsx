@@ -3,13 +3,14 @@ import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MyContext from "../../../context/MyContext";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const SignUpPage = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [image, setImage] = useState(null); // New state for image
+  const [image, setImage] = useState(null);
 
   const { setUser, user } = useContext(MyContext);
   const navigate = useNavigate();
@@ -18,15 +19,12 @@ const SignUpPage = () => {
     e.preventDefault();
     try {
       setLoading(true);
-
       // Create form data
       const formData = new FormData();
       formData.append("name", username);
       formData.append("email", email);
       formData.append("password", password);
-      if (image) formData.append("image", image); // Add image file
-
-      // Send form data including image
+      if (image) formData.append("image", image); 
       const { data } = await axios.post(
         "http://localhost:5000/api/user/register",
         formData,
@@ -34,11 +32,15 @@ const SignUpPage = () => {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-
+  
       setUser(data);
+      toast.success("User registered successfully")
       navigate("/login");
       setLoading(false);
     } catch (err) {
+      if(err.response && err.response.data && err.response.data.message){
+        toast.error(err.response.data.message) 
+      }
       console.log(err);
       setLoading(false);
     }

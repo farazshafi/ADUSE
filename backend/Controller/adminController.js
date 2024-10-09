@@ -39,11 +39,12 @@ export const deleteUser = async (req, res) => {
 // @access  private admin
 export const editUser = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, isAdmin } = req.body;
     const user = await User.findById(req.params.id);
     if (user) {
       user.name = name || user.name;
       user.email = email || user.email;
+      user.isAdmin = isAdmin || user.isAdmin; 
       await user.save();
       res.status(200).json({ user });
     } else {

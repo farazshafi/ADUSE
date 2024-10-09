@@ -1,7 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { TextField, Button, Grid, Paper, Typography } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Grid,
+  Paper,
+  Typography,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
 import axios from "axios";
+import { toast } from "react-toastify";
+import MyContext from "../../../context/MyContext";
 
 const AdminEditUser = () => {
   const { id } = useParams();
@@ -9,6 +19,8 @@ const AdminEditUser = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { setUser,user } = useContext(MyContext);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -35,12 +47,21 @@ const AdminEditUser = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const { data } = await axios.patch(`http://localhost:5000/api/admin/edit/${id}`,{name,email});
-      if (data){
-        console.log("User details updated:", data);
+      const { data } = await axios.patch(
+       `http://localhost:5000/api/admin/edit/${id}`,
+        { name, email, isAdmin }
+      );
+      if (data) {
+        if (data._id === user._id) {
+          setUser(data);
+        }
+        toast.success("User details updated");
         navigate("/admin_dashboard");
       }
     } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        toast.error(err.response.data.message);
+      }
       console.error("Error updating user:", err);
       setLoading(false);
     }
@@ -63,7 +84,7 @@ const AdminEditUser = () => {
               fullWidth
               margin="normal"
               value={name}
-              onChange={(e)=>setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
             />
             <TextField
               label="Email"
@@ -72,7 +93,16 @@ const AdminEditUser = () => {
               fullWidth
               margin="normal"
               value={email}
-              onChange={(e)=>setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isAdmin}
+                  onChange={(e) => setIsAdmin(e.target.checked)}
+                />
+              }
+              label="Is Admin"
             />
             <Button
               type="submit"
