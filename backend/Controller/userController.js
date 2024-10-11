@@ -35,10 +35,22 @@ const s3 = new S3Client({
 // @access  public
 export const registerUser = async (req, res) => {
   const { name, email, password, isAdmin } = req.body;
+
+  const nameRegex = /^[a-zA-Z\s]{5,}$/; // Allows letters and spaces, minimum 5 characters
+  if (!nameRegex.test(name)) {
+    return res.status(400).json({ message: "Name must be at least 5 characters long and contain no special characters." });
+  }
+
+  const passwordRegex = /^[^\s]{7,}$/; // Minimum 7 characters with no whitespace
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({ message: "Password must be at least 7 characters long and cannot contain whitespace." });
+  }
+
   const userExist = await User.findOne({ email });
   if (userExist) {
     return res.status(400).json({ message: "User already exists" });
   }
+
   let imageUrl = "";
   if (req.file) {
     const file = req.file;
@@ -80,6 +92,8 @@ export const registerUser = async (req, res) => {
   }
 };
 
+
+
 // @desc    user login validation
 // @route   POST /api/user/login
 // @access  public
@@ -109,7 +123,6 @@ export const login = async (req, res) => {
   }
 };
 
-
 // @desc    Update user profile (name, email, profile image)
 // @route   PATCH /api/user/update
 // @access  Private
@@ -121,11 +134,19 @@ export const update = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Update user fields (name, email)
+    const nameRegex = /^[a-zA-Z\s]{5,}$/; // Allows letters and spaces, minimum 5 characters
+    if (req.body.name && !nameRegex.test(req.body.name)) {
+      return res.status(400).json({ message: "Name must be at least 5 characters long and contain no special characters." });
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // Basic email regex
+    if (req.body.email && !emailRegex.test(req.body.email)) {
+      return res.status(400).json({ message: "Invalid email format." });
+    }
+
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
 
-    // Handle profile image update
     let imageUrl = user.imageUrl; // Keep current image URL if not updating
     if (req.file) {
       const file = req.file;
@@ -160,6 +181,7 @@ export const update = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
 
 // @desc    get user details
 // @route   PUT /api/user/:id
