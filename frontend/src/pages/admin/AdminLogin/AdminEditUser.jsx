@@ -11,7 +11,8 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { toast } from "react-toastify";
-import MyContext from "../../../context/MyContext";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../../redux/slices/userSlice";
 
 const AdminEditUser = () => {
   const { id } = useParams();
@@ -20,7 +21,7 @@ const AdminEditUser = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const { setUser,user } = useContext(MyContext);
+  const dispatch = useDispatch(); // Use Redux dispatch
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -33,6 +34,7 @@ const AdminEditUser = () => {
         if (data) {
           setName(data.name);
           setEmail(data.email);
+          setIsAdmin(data.isAdmin);
         }
         setLoading(false);
       } catch (err) {
@@ -48,13 +50,22 @@ const AdminEditUser = () => {
     try {
       setLoading(true);
       const { data } = await axios.patch(
-       `http://localhost:5000/api/admin/edit/${id}`,
+        `http://localhost:5000/api/admin/edit/${id}`,
         { name, email, isAdmin }
       );
       if (data) {
-        if (data._id === user._id) {
-          setUser(data);
+        const existUser = JSON.parse(localStorage.getItem("user"));
+        if (existUser && existUser._id === data.user._id) {
+          const updatedUser = {
+            ...existUser,
+            name: data.user.name,
+            email: data.user.email,
+            isAdmin: data.user.isAdmin,
+          };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          dispatch(setUser(updatedUser));
         }
+
         toast.success("User details updated");
         navigate("/admin_dashboard");
       }
@@ -63,6 +74,7 @@ const AdminEditUser = () => {
         toast.error(err.response.data.message);
       }
       console.error("Error updating user:", err);
+    } finally {
       setLoading(false);
     }
   };

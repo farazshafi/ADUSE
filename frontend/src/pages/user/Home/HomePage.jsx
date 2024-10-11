@@ -3,14 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { logoutUser, selectUser } from "../../../redux/slices/userSlice";
+import {
+  logoutUser,
+  selectUser,
+  setUser,
+} from "../../../redux/slices/userSlice";
 
 const HomePage = () => {
   const user = useSelector(selectUser);
   const [profile, setProfile] = useState(user?.profileImage);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const handleProfileNavigation = (e) => {
     e.preventDefault();
@@ -18,7 +22,7 @@ const HomePage = () => {
   };
 
   const handleLogout = () => {
-    dispatch(logoutUser())
+    dispatch(logoutUser());
     navigate("/login");
   };
 
@@ -27,18 +31,15 @@ const HomePage = () => {
       navigate("/login");
       return;
     }
-
     const fetchProfileImage = async () => {
       try {
         setLoading(true);
         const { data } = await axios.get(
           `http://localhost:5000/api/user/profile_image/${user._id}`
         );
-        console.log("user profile data: ", data);
-
-        // Update the profile state if fetched image is different
         if (data.imageUrl !== user.profileImage) {
           setProfile(data.imageUrl);
+          dispatch(setUser({ ...user, profileImage: data.imageUrl }));
         }
         setLoading(false);
       } catch (err) {
@@ -46,11 +47,10 @@ const HomePage = () => {
         setLoading(false);
       }
     };
-
     fetchProfileImage();
-  }, [navigate, user]);
+  }, [navigate, user, dispatch]);
 
-  if (!user) return null; 
+  if (!user) return null;
 
   return (
     <Grid

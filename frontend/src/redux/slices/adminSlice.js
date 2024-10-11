@@ -22,7 +22,8 @@ const adminSlice = createSlice({
     logoutAdmin(state){
         state.admin = null;
         localStorage.removeItem("admin")
-    }
+    },
+    
     
   },
 });
