@@ -6,19 +6,21 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useContext, useEffect, useState } from "react";
-import MyContext from "../../../context/MyContext";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser, setUser } from "../../../redux/slices/userSlice"; // Import Redux actions and selectors
 
 const ProfilePage = () => {
-  const { user, setUser } = useContext(MyContext);
-  const [name, setName] = useState(user && user.name);
-  const [email, setEmail] = useState(user && user.email);
+  const user = useSelector(selectUser); // Get the user from Redux state
+  const dispatch = useDispatch(); // Dispatch for updating Redux store
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState(user && user.imageUrl);
+  const [profile, setProfile] = useState(user?.profileImage || "");
 
   const navigate = useNavigate();
 
@@ -44,18 +46,23 @@ const ProfilePage = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${user.token}`, // Corrected this line
+            Authorization: `Bearer ${user.token}`, // Ensure proper Authorization
           },
         }
       );
 
-      console.log("Profile updated successfully:", data);
-      setUser((prevUser) => ({
-        ...prevUser,
-        name: data.name,
-        email: data.email,
-        imageUrl: data.imageUrl,
-      }));
+      // Dispatch the updated user to the Redux store
+      dispatch(
+        setUser({
+          ...user,
+          name: data.name,
+          email: data.email,
+          profileImage: data.imageUrl,
+        })
+      );
+
+      // Update local profile state
+      setProfile(data.imageUrl);
       toast.success("Profile updated successfully!");
     } catch (error) {
       if (error.response && error.response.data && error.response.data.message) {
