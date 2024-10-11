@@ -1,14 +1,16 @@
 import { Grid, Button, Typography, Avatar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
-import MyContext from "../../../context/MyContext";
+import { useEffect, useState } from "react";
 import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutUser, selectUser } from "../../../redux/slices/userSlice";
 
 const HomePage = () => {
-  const { user, setUser } = useContext(MyContext);
-  const [profile, setProfile] = useState();
+  const user = useSelector(selectUser);
+  const [profile, setProfile] = useState(user?.profileImage);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch()
 
   const handleProfileNavigation = (e) => {
     e.preventDefault();
@@ -16,9 +18,8 @@ const HomePage = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    dispatch(logoutUser())
     navigate("/login");
-    setUser(null);
   };
 
   useEffect(() => {
@@ -35,14 +36,10 @@ const HomePage = () => {
         );
         console.log("user profile data: ", data);
 
-        // Update the profile state and only update the user context if the profile image is different
+        // Update the profile state if fetched image is different
         if (data.imageUrl !== user.profileImage) {
-          setUser((prevUser) => ({
-            ...prevUser,
-            profileImage: data.imageUrl,
-          }));
+          setProfile(data.imageUrl);
         }
-        setProfile(data.imageUrl);
         setLoading(false);
       } catch (err) {
         console.log(err);
@@ -51,7 +48,9 @@ const HomePage = () => {
     };
 
     fetchProfileImage();
-  }, [navigate, setUser, user]);
+  }, [navigate, user]);
+
+  if (!user) return null; 
 
   return (
     <Grid
@@ -66,13 +65,13 @@ const HomePage = () => {
           "loading..."
         ) : (
           <Avatar
-            src={profile}
+            src={profile || user.profileImage}
             alt={user?.name || "User"}
             sx={{ width: 100, height: 100, margin: "0 auto" }}
           />
         )}
         <Typography sx={{ mt: "20px" }} variant="h5" gutterBottom>
-          Welcome, {user && user.name}!
+          Welcome, {user.name}!
         </Typography>
 
         <Button

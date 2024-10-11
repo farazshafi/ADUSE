@@ -1,21 +1,16 @@
-import { useContext, useEffect, useState } from "react";
-import {
-  Grid,
-  TextField,
-  Button,
-  Typography,
-  Paper,
-  useRadioGroup,
-} from "@mui/material";
+import { useEffect, useState } from "react";
+import { Grid, TextField, Button, Typography, Paper } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
-import MyContext from "../../../context/MyContext";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser, setUser } from "../../../redux/slices/userSlice";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { user, setUser } = useContext(MyContext);
+  const user = useSelector(selectUser);
+  const dispatch = useDispatch();  // Redux dispatch function
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -32,13 +27,18 @@ const LoginPage = () => {
         }
       );
       if (data) {
-        setUser(data);
-        toast.success("Successfully logged in")
+        // Dispatch to Redux store instead of context
+        dispatch(setUser(data));
+
+        // Store the user details in localStorage for persistence
+        localStorage.setItem("user", JSON.stringify(data));
+
+        toast.success("Successfully logged in");
         navigate("/");
         setLoading(false);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       if (err.response && err.response.data && err.response.data.message) {
         toast.error(err.response.data.message); // Error message from backend
       } else {
@@ -49,11 +49,15 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
-    console.log(useRadioGroup);
     if (user) {
+      console.log("user: ", user)
       navigate("/");
     }
   }, [user, navigate]);
+
+  if(user){
+    return null
+  }
 
   return (
     <Grid
