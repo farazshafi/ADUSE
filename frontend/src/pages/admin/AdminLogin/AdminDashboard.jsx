@@ -20,8 +20,10 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutAdmin, selectAdmin, selectUsers, setAllUsers } from "../../../redux/slices/adminSlice";
+import { selectUser } from "../../../redux/slices/userSlice";
 
 const AdminDashboard = () => {
+  const user = useSelector(selectUser)
   const admin = useSelector(selectAdmin);
   const users = useSelector(selectUsers);
   const [search, setSearch] = useState("");
@@ -60,7 +62,10 @@ const AdminDashboard = () => {
             Authorization: `Bearer ${admin.token}`, // Attach admin token
           },
         });
-        fetchAllUsers(); // Refresh user list after deletion
+        if(user._id === id){
+          localStorage.removeItem("user")
+        }
+        fetchAllUsers();
       } catch (err) {
         console.log(err);
       }
@@ -82,7 +87,7 @@ const AdminDashboard = () => {
     } else {
       fetchAllUsers(); // Fetch users only if admin is logged in
     }
-  }, [admin, navigate]);
+  }, [admin, navigate,user]);
 
   if(!admin){
     return null

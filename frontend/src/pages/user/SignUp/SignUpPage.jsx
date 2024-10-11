@@ -4,15 +4,18 @@ import { Link, useNavigate } from "react-router-dom";
 import MyContext from "../../../context/MyContext";
 import axios from "axios";
 import { toast } from "react-toastify";
+import {useSelector,useDispatch} from "react-redux"
+import { selectUser, setUser } from "../../../redux/slices/userSlice";
 
 const SignUpPage = () => {
+  const user = useSelector(selectUser)
+  const dispatch = useDispatch()
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(null);
-
-  const { setUser, user } = useContext(MyContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -32,8 +35,9 @@ const SignUpPage = () => {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-  
-      setUser(data);
+      console.log("user : ",user);
+      
+      dispatch(setUser(data))
       toast.success("User registered successfully")
       navigate("/login");
       setLoading(false);

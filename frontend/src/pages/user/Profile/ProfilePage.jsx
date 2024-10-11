@@ -28,7 +28,7 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Set loading to true during submit
+    setLoading(true);
 
     const formData = new FormData();
     formData.append("name", name);
