@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Grid,
   Paper,
@@ -14,17 +14,18 @@ import {
   IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit"; // Import Edit Icon
+import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
-import MyContext from "../../../context/MyContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutAdmin, selectAdmin, selectUsers, setAllUsers } from "../../../redux/slices/adminSlice";
 
 const AdminDashboard = () => {
-  const { admin,setAdmin,user } = useContext(MyContext);
-  const [users, setUsers] = useState([]);
+  const admin = useSelector(selectAdmin);
+  const users = useSelector(selectUsers);
   const [search, setSearch] = useState("");
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleSearchChange = (e) => {
@@ -33,28 +34,33 @@ const AdminDashboard = () => {
 
   const fetchAllUsers = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/admin/users");
-      setUsers(data);
+      const { data } = await axios.get("http://localhost:5000/api/admin/users", {
+        headers: {
+          Authorization: `Bearer ${admin.token}`, // Attach admin token
+        },
+      });
+      dispatch(setAllUsers(data)); // Update Redux with fetched users
     } catch (err) {
       console.error("Error fetching users:", err);
     }
   };
 
   const handleAddUser = () => {
-    // Redirect to add user page or implement add logic here
-    navigate("/admin/add_user"); // Example of redirect to an add user page
+    navigate("/admin/add_user");
   };
 
   const handleDeleteUser = async (id, name) => {
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${name}`
+      `Are you sure you want to delete ${name}?`
     );
     if (confirmDelete) {
       try {
-        await axios.delete(
-          `http://localhost:5000/api/admin/delete/${id}`
-        );
-        fetchAllUsers()
+        await axios.delete(`http://localhost:5000/api/admin/delete/${id}`, {
+          headers: {
+            Authorization: `Bearer ${admin.token}`, // Attach admin token
+          },
+        });
+        fetchAllUsers(); // Refresh user list after deletion
       } catch (err) {
         console.log(err);
       }
@@ -62,21 +68,25 @@ const AdminDashboard = () => {
   };
 
   const handleEditUser = (id) => {
-    navigate(`/admin/edit_user/${id}`); 
+    navigate(`/admin/edit_user/${id}`);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("admin")
-    setAdmin(null)
-  }
+    dispatch(logoutAdmin())
+    navigate("/admin_login");
+  };
 
   useEffect(() => {
     if (!admin) {
       navigate("/admin_login");
+    } else {
+      fetchAllUsers(); // Fetch users only if admin is logged in
     }
+  }, [admin, navigate]);
 
-    fetchAllUsers();
-  }, [admin, navigate,user]);
+  if(!admin){
+    return null
+  }
 
   return (
     <Grid container justifyContent="center" style={{ padding: "20px" }}>
@@ -119,26 +129,27 @@ const AdminDashboard = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user._id}>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      aria-label="edit"
-                      onClick={() => handleEditUser(user._id)} // Redirect to edit page
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      aria-label="delete"
-                      onClick={() => handleDeleteUser(user._id, user.name)} // Confirm delete
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {users
+                .map((user) => (
+                  <TableRow key={user._id}>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        aria-label="edit"
+                        onClick={() => handleEditUser(user._id)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        aria-label="delete"
+                        onClick={() => handleDeleteUser(user._id, user.name)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>

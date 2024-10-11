@@ -7,14 +7,16 @@ import {
   Typography,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import MyContext from "../../../context/MyContext";
 import { toast } from "react-toastify";
+import {useDispatch, useSelector} from "react-redux"
+import { selectAdmin, setAdmin } from "../../../redux/slices/adminSlice";
 
 const AdminLoginPage = () => {
-  const { admin, setAdmin } = useContext(MyContext);
+  const admin = useSelector(selectAdmin)
+  const dispatch = useDispatch()
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,7 +35,7 @@ const AdminLoginPage = () => {
       );
       if (data) {
         localStorage.setItem("admin", JSON.stringify(data));
-        setAdmin(data);
+        dispatch(setAdmin(data))
         toast.success("admin login successful");
         navigate("/admin_dashboard");
         setLoading(false)
